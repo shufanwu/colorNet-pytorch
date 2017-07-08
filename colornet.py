@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
+
 class LowLevelFeatNet(nn.Module):
     def __init__(self):
         super(LowLevelFeatNet, self).__init__()
@@ -25,12 +26,15 @@ class LowLevelFeatNet(nn.Module):
         x1 = F.relu(self.bn4(self.conv4(x1)))
         x1 = F.relu(self.bn5(self.conv5(x1)))
         x1 = F.relu(self.bn6(self.conv6(x1)))
-        x2 = F.relu(self.bn1(self.conv1(x2)))
-        x2 = F.relu(self.bn2(self.conv2(x2)))
-        x2 = F.relu(self.bn3(self.conv3(x2)))
-        x2 = F.relu(self.bn4(self.conv4(x2)))
-        x2 = F.relu(self.bn5(self.conv5(x2)))
-        x2 = F.relu(self.bn6(self.conv6(x2)))
+        if self.training:
+            x2 = x1.clone()
+        else:
+            x2 = F.relu(self.bn1(self.conv1(x2)))
+            x2 = F.relu(self.bn2(self.conv2(x2)))
+            x2 = F.relu(self.bn3(self.conv3(x2)))
+            x2 = F.relu(self.bn4(self.conv4(x2)))
+            x2 = F.relu(self.bn5(self.conv5(x2)))
+            x2 = F.relu(self.bn6(self.conv6(x2)))
         return x1, x2
 
 
@@ -109,13 +113,16 @@ class ColorizationNet(nn.Module):
         self.upsample = nn.UpsamplingNearest2d(scale_factor=2)
 
     def forward(self, mid_input, global_input):
-        h = mid_input.size()[2]
-        w = mid_input.size()[3]
+        w = mid_input.size()[2]
+        h = mid_input.size()[3]
         global_input = global_input.unsqueeze(2).unsqueeze(2).expand_as(mid_input)
         fusion_layer = torch.cat((mid_input, global_input), 1)
+        fusion_layer = fusion_layer.permute(2, 3, 0, 1).contiguous()
         fusion_layer = fusion_layer.view(-1, 512)
-        x = F.relu(self.bn1(self.fc1(fusion_layer)))
-        x = x.view(-1, 256, h, w)
+        fusion_layer = self.bn1(self.fc1(fusion_layer))
+        fusion_layer = fusion_layer.view(w, h, -1, 256)
+
+        x = fusion_layer.permute(2, 3, 0, 1).contiguous()
         x = F.relu(self.bn2(self.conv1(x)))
         x = self.upsample(x)
         x = F.relu(self.bn3(self.conv2(x)))
@@ -137,13 +144,13 @@ class ColorNet(nn.Module):
 
     def forward(self, x1, x2):
         x1, x2 = self.low_lv_feat_net(x1, x2)
-        print('after low_lv, mid_input is:{}, global_input is:{}'.format(x1.size(), x2.size()))
+        #print('after low_lv, mid_input is:{}, global_input is:{}'.format(x1.size(), x2.size()))
         x1 = self.mid_lv_feat_net(x1)
-        print('after mid_lv, mid2fusion_input is:{}'.format(x1.size()))
+        #print('after mid_lv, mid2fusion_input is:{}'.format(x1.size()))
         class_input, x2 = self.global_feat_net(x2)
-        print('after global_lv, class_input is:{}, global2fusion_input is:{}'.format(class_input.size(), x2.size()))
+        #print('after global_lv, class_input is:{}, global2fusion_input is:{}'.format(class_input.size(), x2.size()))
         class_output = self.class_net(class_input)
-        print('after class_lv, class_output is:{}'.format(class_output.size()))
+        #print('after class_lv, class_output is:{}'.format(class_output.size()))
         output = self.upsample_col_net(x1, x2)
-        print('after upsample_lv, output is:{}'.format(output.size()))
+        #print('after upsample_lv, output is:{}'.format(output.size()))
         return class_output, output

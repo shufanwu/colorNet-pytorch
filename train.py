@@ -18,41 +18,54 @@ original_transform = transforms.Compose([
     #transforms.ToTensor()
 ])
 
-data_dir = "../places205"
-train_set = TrainImageFolder(os.path.join(data_dir, 'train'), original_transform)
+have_cuda = torch.cuda.is_available()
+epochs = 1
+
+data_dir = "../data/vision/torralba/deeplearning/images256/"
+train_set = TrainImageFolder(data_dir, original_transform)
 train_set_size = len(train_set)
 train_set_classes = train_set.classes
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=1, shuffle=True, num_workers=4)
-
+train_loader = torch.utils.data.DataLoader(train_set, batch_size=32, shuffle=True, num_workers=4)
 color_model = ColorNet()
+if os.path.exists('./colornet_params.pkl'):
+    color_model.load_state_dict(torch.load('colornet_params.pkl'))
+if have_cuda:
+    color_model.cuda()
 optimizer = optim.Adadelta(color_model.parameters())
 
 
 def train(epoch):
     color_model.train()
+
     try:
-        messagefile = open('message.txt', 'w')
         for batch_idx, (data, classes) in enumerate(train_loader):
+            messagefile = open('./message.txt', 'a')
             original_img = data[0].unsqueeze(1).float()
-            scale_img = data[1].unsqueeze(1).float()
-            lab_img = data[2].float()
-            img_ab = lab_img[:, 1:3, :, :]
-            original_img, scale_img = Variable(original_img), Variable(scale_img)
+            img_ab = data[1].float()
+            if have_cuda:
+                original_img = original_img.cuda()
+                img_ab = img_ab.cuda()
+                classes = classes.cuda()
+            original_img = Variable(original_img)
             img_ab = Variable(img_ab)
             classes = Variable(classes)
             optimizer.zero_grad()
-            class_output, output = color_model(original_img, scale_img)
-            ems_loss = torch.pow((img_ab-output), 2).sum()/torch.from_numpy(np.array(list(output.size()))).prod()
-            print(ems_loss)
-            print(F.cross_entropy(class_output, classes))
-            loss = ems_loss + 1/300 * F.cross_entropy(class_output, classes)
-            loss.backward()
+            class_output, output = color_model(original_img, original_img)
+            ems_loss = torch.pow((img_ab - output), 2).sum() / torch.from_numpy(np.array(list(output.size()))).prod()
+            cross_entropy_loss = 1/300 * F.cross_entropy(class_output, classes)
+            loss = ems_loss + cross_entropy_loss
+            lossmsg = 'loss: %.9f\n' % (loss.data[0])
+            messagefile.write(lossmsg)
+            ems_loss.backward(retain_variables=True)
+            cross_entropy_loss.backward()
             optimizer.step()
-            if batch_idx % 1000 == 0:
+            if batch_idx % 500 == 0:
                 message = 'Train Epoch:%d\tPercent:[%d/%d (%.0f%%)]\tLoss:%.9f\n' % (
                     epoch, batch_idx * len(data), len(train_loader.dataset),
                     100. * batch_idx / len(train_loader), loss.data[0])
                 messagefile.write(message)
+                torch.save(color_model.state_dict(), 'colornet_params.pkl')
+            messagefile.close()
                 # print('Train Epoch: {}[{}/{}({:.0f}%)]\tLoss: {:.9f}\n'.format(
                 #     epoch, batch_idx * len(data), len(train_loader.dataset),
                 #     100. * batch_idx / len(train_loader), loss.data[0]))
@@ -61,8 +74,8 @@ def train(epoch):
         logfile.write(traceback.format_exc())
         logfile.close()
     finally:
-        messagefile.close()
         torch.save(color_model.state_dict(), 'colornet_params.pkl')
 
 
-train(20)
+for epoch in range(1, epochs + 1):
+    train(epoch)
