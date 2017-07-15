@@ -5,7 +5,7 @@ This project is a PyTorch version of the [ColorNet](http://hi.cs.waseda.ac.jp/~i
 
 ## Overview
 * Net model
-![...](readme images/model.jpg)
+![...](https://github.com/shufanwu/colorNet-pytorch/blob/master/readme%20images/model.jpg)
 
 * DataSet
 [MIT Places205](http://places.csail.mit.edu/user/index.php)  
