@@ -30,7 +30,11 @@ def val():
     i = 0
     for data, _ in val_loader:
         original_img = data[0].unsqueeze(1).float()
-
+        gray_name = './gray/' + str(i) + '.jpg'
+        for img in original_img:
+            pic = img.squeeze().numpy()
+            pic = pic.astype(np.float64)
+            plt.imsave(gray_name, pic, cmap='gray')
         w = original_img.size()[2]
         h = original_img.size()[3]
         scale_img = data[1].unsqueeze(1).float()
