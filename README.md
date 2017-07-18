@@ -5,15 +5,19 @@ This project is a PyTorch version of the [ColorNet](http://hi.cs.waseda.ac.jp/~i
 
 ## Overview
 * Net model
-![...](https://github.com/shufanwu/colorNet-pytorch/blob/master/readme%20images/model.jpg)
+![...](https://github.com/shufanwu/colorNet-pytorch/blob/master/readme%20images/model.png)
 
 * DataSet
 [MIT Places205](http://places.csail.mit.edu/user/index.php)  
 > Hint: For there are grayscale images in the dataset, so I write a script to remove these images
 
 ## Result
-![...](readme images/good-result.jpg)
-![...](readme images/bad-result.jpg)
+I just train this model for 3 epochs while 11 epochs in the paper， so I think it will work better if train it more.
+
+* Good results  
+![...](https://github.com/shufanwu/colorNet-pytorch/blob/master/readme%20images/good-result.png)  
+* Bad results  
+![...](https://github.com/shufanwu/colorNet-pytorch/blob/master/readme%20images/bad-result.png)  
 For this network is trained by landscape image database, it's work well for scenery pictures. So if you use this network to color  images of other types, maybe you can't get a satisfying output.
 
 
