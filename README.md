@@ -11,6 +11,10 @@ This project is a PyTorch version of the [ColorNet](http://hi.cs.waseda.ac.jp/~i
 [MIT Places205](http://places.csail.mit.edu/user/index.php)  
 > Hint: For there are grayscale images in the dataset, so I write a script to remove these images
 
+* Development Environment  
+Python 3.5.1  
+CUDA 8.0  
+
 ## Result
 I just train this model for 3 epochs while 11 epochs in the paper， so I think it will work better if train it more.
 
