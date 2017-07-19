@@ -9,7 +9,7 @@ This project is a PyTorch version of the [ColorNet](http://hi.cs.waseda.ac.jp/~i
 
 * DataSet
 [MIT Places205](http://places.csail.mit.edu/user/index.php)  
-> Hint: For there are grayscale images in the dataset, so I write a script to remove these images
+> Hint: For there are grayscale images in the dataset, I write a script to remove these images
 
 * Development Environment  
 Python 3.5.1  
