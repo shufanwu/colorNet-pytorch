@@ -24,6 +24,9 @@ I just train this model for 3 epochs while 11 epochs in the paper， so I think 
 ![...](https://github.com/shufanwu/colorNet-pytorch/blob/master/readme%20images/bad-result.png)  
 For this network is trained by landscape image database, it's work well for scenery pictures. So if you use this network to color  images of other types, maybe you can't get a satisfying output.
 
+## Pretrained model
+You can download the model from  https://drive.google.com/file/d/0B6WuMuYfgb4XblE4c3N2RUJQcFU/view?usp=sharing
+
 ## Todo
 Implement with PyTorch1.0
 
